@@ -1,0 +1,58 @@
+@startuml
+
+package "org.example.source" {
+    class BinanceWebSocketSource {
+        +connect()
+    }
+}
+
+package "org.example.strategy" {
+    abstract class TradingStrategy {
+        #executeTrade()
+        #onPriceUpdate()
+    }
+
+    class SimpleTrader
+    class CrossingMATrader
+}
+
+package "org.example.model" {
+    class Trade {
+        +price: double
+        +quantity: double
+        +timestamp: long
+    }
+
+    class TradeEvent {
+        +symbol: String
+        +price: double
+        +volume: double
+        +timestamp: long
+    }
+}
+
+package "org.example.sink" {
+    class InfluxBalanceSink {
+        +invoke()
+    }
+}
+
+package "org.example.main" {
+    class Main {
+        +main()
+    }
+}
+
+' Relationships
+TradingStrategy <|-- SimpleTrader
+TradingStrategy <|-- CrossingMATrader
+
+BinanceWebSocketSource --> Trade
+Trade --> TradeEvent
+InfluxBalanceSink --> TradeEvent
+
+Main --> BinanceWebSocketSource
+Main --> TradingStrategy
+Main --> InfluxBalanceSink
+
+@enduml

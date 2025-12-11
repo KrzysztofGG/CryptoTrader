@@ -1,12 +1,12 @@
-package org.example;
+package org.example.strategy;
 
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
-import org.apache.flink.api.common.state.ValueState;
-import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
+import org.example.model.Trade;
+import org.example.model.TradeEvent;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -58,7 +58,6 @@ public class SimpleTrader extends TradingStrategy {
 
         // ---- NO ACTION ----
         else {
-
             hold(trade, collector);
         }
     }

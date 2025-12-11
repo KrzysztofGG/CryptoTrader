@@ -1,4 +1,4 @@
-package org.example;
+package org.example.sink;
 
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.InfluxDBClientFactory;
@@ -7,6 +7,7 @@ import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
+import org.example.model.TradeEvent;
 
 import java.time.Instant;
 

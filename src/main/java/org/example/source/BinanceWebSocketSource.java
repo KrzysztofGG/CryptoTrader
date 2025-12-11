@@ -1,4 +1,4 @@
-package org.example;
+package org.example.source;
 
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.java_websocket.client.WebSocketClient;

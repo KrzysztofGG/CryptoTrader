@@ -1,11 +1,16 @@
-package org.example;
+package org.example.main;
 
 
 import org.apache.flink.api.common.functions.MapFunction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-
+import org.example.model.Trade;
+import org.example.model.TradeEvent;
+import org.example.sink.InfluxBalanceSink;
+import org.example.source.BinanceWebSocketSource;
+import org.example.strategy.SimpleTrader;
+import org.example.strategy.TradingStrategy;
 
 
 public class Main {
