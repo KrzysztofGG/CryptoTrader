@@ -7,17 +7,22 @@ import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 import org.example.model.Trade;
 import org.example.model.TradeEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public abstract class TradingStrategy
         extends KeyedProcessFunction<String, Trade, TradeEvent> {
 
+    private static final Logger LOG =
+            LoggerFactory.getLogger(TradingStrategy.class);
+
     protected transient ValueState<Double> cashBalance;
     protected transient ValueState<Double> entryPrice;
     protected transient ValueState<Double> positionVolume ;
-    protected final double initialCapital = 100_000;
-    protected final double investmentSize = 0.20; //invest 20%
+    protected final double initialCapital = 1000;
+    protected final double investmentSize = 0.30; //buy for % of full Capital
 
     @Override
     public void open(Configuration parameters) {
@@ -42,9 +47,9 @@ public abstract class TradingStrategy
 
         cashBalance.update(balance - volume * trade.getClosePrice());
         entryPrice.update(trade.getClosePrice());
-        positionVolume .update(volume);
+        positionVolume.update(volume);
 
-        System.out.println("BUY " + trade.getSymbol() + " PRICE: " + trade.getClosePrice() + " VOLUME: " + volume);
+        LOG.info("BUY " + trade.getSymbol() + " PRICE: " + trade.getClosePrice() + " VOLUME: " + volume);
 
         out.collect(new TradeEvent(
                 trade.getSymbol(),
@@ -69,7 +74,7 @@ public abstract class TradingStrategy
         entryPrice.clear();
         positionVolume.clear();
 
-        System.out.println("SELL " + trade.getSymbol() + " PnL: " + pnl + "$" + " BALANCE: " + cashBalance.value());
+        LOG.info("SELL " + trade.getSymbol() + " PnL: " + pnl + "$" + " BALANCE: " + cashBalance.value());
 
         out.collect(new TradeEvent(
                 trade.getSymbol(),

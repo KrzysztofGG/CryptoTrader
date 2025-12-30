@@ -3,10 +3,15 @@ package org.example.source;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 
 public class BinanceWebSocketSource implements SourceFunction<String> {
+
+    private static final Logger LOG =
+            LoggerFactory.getLogger(BinanceWebSocketSource.class);
 
     private volatile boolean running = true;
     private WebSocketClient client;
@@ -24,7 +29,7 @@ public class BinanceWebSocketSource implements SourceFunction<String> {
         client = new WebSocketClient(new URI(url)) {
             @Override
             public void onOpen(ServerHandshake serverHandshake) {
-                System.out.println("Connected to Binance WebSocket for " + symbol);
+                LOG.info("Connected to Binance WebSocket for " + symbol);
             }
 
             @Override
@@ -36,12 +41,12 @@ public class BinanceWebSocketSource implements SourceFunction<String> {
 
             @Override
             public void onClose(int code, String reason, boolean remote) {
-                System.out.println("WebSocket closed: " + reason);
+                LOG.info("WebSocket closed: " + reason);
             }
 
             @Override
             public void onError(Exception e) {
-                e.printStackTrace();
+                LOG.error(e.getMessage());
             }
         };
 

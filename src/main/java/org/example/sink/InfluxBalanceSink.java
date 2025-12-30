@@ -3,15 +3,17 @@ package org.example.sink;
 import com.influxdb.client.InfluxDBClient;
 import com.influxdb.client.InfluxDBClientFactory;
 import com.influxdb.client.WriteApiBlocking;
-import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.sink.RichSinkFunction;
 import org.example.model.TradeEvent;
-
-import java.time.Instant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InfluxBalanceSink extends RichSinkFunction<TradeEvent> {
+
+    private static final Logger LOG =
+            LoggerFactory.getLogger(InfluxBalanceSink.class);
 
     private transient InfluxDBClient influxDBClient;
     private transient WriteApiBlocking writeApi;
@@ -34,13 +36,17 @@ public class InfluxBalanceSink extends RichSinkFunction<TradeEvent> {
         // Create InfluxDB 2.x client
         influxDBClient = InfluxDBClientFactory.create(url, token.toCharArray(), org, bucket);
         writeApi = influxDBClient.getWriteApiBlocking();
+
+        LOG.info(
+                "Influx sink initialized: url={}, org={}, bucket={}",
+                url, org, bucket
+        );
     }
 
     @Override
     public void invoke(TradeEvent event, Context context) {
         try {
             Point point = Point.measurement("trade_balance")
-                    .time(Instant.ofEpochMilli(event.timestamp), WritePrecision.MS)
                     .addField("balance", event.balance)
                     .addField("price", event.price)
                     .addField("pnl", event.pnl)
@@ -50,8 +56,7 @@ public class InfluxBalanceSink extends RichSinkFunction<TradeEvent> {
 
             writeApi.writePoint(point);
         } catch (Exception e) {
-            System.err.println("Error writing to InfluxDB: " + e.getMessage());
-            e.printStackTrace();
+            LOG.error("Error writing TradeEvent to InfluxDB", e);
         }
     }
 
