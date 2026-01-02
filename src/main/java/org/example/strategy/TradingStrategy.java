@@ -15,13 +15,13 @@ import java.util.List;
 public abstract class TradingStrategy
         extends KeyedProcessFunction<String, Trade, TradeEvent> {
 
-    private static final Logger LOG =
+    protected static final Logger LOG =
             LoggerFactory.getLogger(TradingStrategy.class);
 
     protected transient ValueState<Double> cashBalance;
     protected transient ValueState<Double> entryPrice;
     protected transient ValueState<Double> positionVolume ;
-    protected final double initialCapital = 1000;
+    protected final double initialCapital = 100_000;
     protected final double investmentSize = 0.30; //buy for % of full Capital
 
     @Override
@@ -74,7 +74,7 @@ public abstract class TradingStrategy
         entryPrice.clear();
         positionVolume.clear();
 
-        LOG.info("SELL " + trade.getSymbol() + " PnL: " + pnl + "$" + " BALANCE: " + cashBalance.value());
+        LOG.info("SELL" + trade.getSymbol() +" reason: " + reason + " PnL: " + pnl + "$" + " BALANCE: " + cashBalance.value());
 
         out.collect(new TradeEvent(
                 trade.getSymbol(),

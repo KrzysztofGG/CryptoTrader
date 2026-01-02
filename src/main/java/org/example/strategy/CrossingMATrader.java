@@ -16,11 +16,12 @@ import java.util.stream.StreamSupport;
 
 public class CrossingMATrader extends TradingStrategy {
 
-    private final int FAST = 3;   // short-term MA
-    private final int SLOW = 10;  // longer-term MA
+    private final int FAST = 5;   // short-term MA
+    private final int SLOW = 18;  // longer-term MA
     private final double stopLossThreshold = 0.01;
     private final double takeProfitThreshold = 0.02;
-    private final double volumeThreshold = 0.01;
+    private final double volumeThreshold = 0.005;
+    private final boolean checkVolume = false;
 
     private transient ValueState<Double> prevFastMA;
     private transient ValueState<Double> prevSlowMA;
@@ -73,9 +74,7 @@ public class CrossingMATrader extends TradingStrategy {
             bearishCross = (lastFast > lastSlow) && (fastMA < slowMA);
         }
 
-        // store MA history for next tick
-        prevFastMA.update(fastMA);
-        prevSlowMA.update(slowMA);
+
 
         Double entry = entryPrice.value();
         double price = trade.getClosePrice();
@@ -102,14 +101,21 @@ public class CrossingMATrader extends TradingStrategy {
 
         } else {
             // Buy when fast MA crosses slow MA
-            boolean volumeOK = trade.getVolume() >= volumeMA * (1 + volumeThreshold);
-            boolean trendingUp = fastMA > slowMA;
-            if ((bullishCross || trendingUp ) && volumeOK) {
+            boolean volumeOK = !checkVolume || trade.getVolume() >= volumeMA * (1 + volumeThreshold);
+            if (bullishCross && volumeOK) {
                 buy(trade, collector);
             } else{
+                LOG.info(
+                        "price={}, fastMA={}, slowMA={}, volumeOK={}, bullishCross={}",
+                        price, fastMA, slowMA, volumeOK, bullishCross
+                );
                 hold(trade, collector);
             }
         }
+
+        // store MA history for next tick
+        prevFastMA.update(fastMA);
+        prevSlowMA.update(slowMA);
     }
 
     private List<Double> updateHistory(ListState<Double> state, double newValue, int max) throws Exception {

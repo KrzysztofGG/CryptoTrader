@@ -58,6 +58,10 @@ public class SimpleTrader extends TradingStrategy {
 
         // ---- NO ACTION ----
         else {
+            LOG.info(
+                    "price={}, MA={}",
+                    trade.getClosePrice(), movingAvg
+            );
             hold(trade, collector);
         }
     }

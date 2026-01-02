@@ -12,6 +12,7 @@ import org.example.model.TradeEvent;
 import org.example.sink.CsvSink;
 import org.example.sink.InfluxBalanceSink;
 import org.example.source.BinanceWebSocketSource;
+import org.example.strategy.CrossingMATrader;
 import org.example.strategy.SimpleTrader;
 import org.example.strategy.TradingStrategy;
 import org.slf4j.Logger;
@@ -45,10 +46,16 @@ public class Main {
         String influxUrl = params.getRequired("INFLUXDB_URL");
         String influxToken = params.getRequired("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN");
         String runningMode = params.getRequired("RUNNING_MODE");
+        String strategy = params.getRequired("STRATEGY");
         String influxOrg = params.get("DOCKER_INFLUXDB_INIT_ORG", "trading");
         String influxBucket = params.get("DOCKER_INFLUXDB_INIT_BUCKET", "trading_db");
 
-        TradingStrategy trader = new SimpleTrader();
+        TradingStrategy trader = null;
+        if ("simple".equals(strategy)) {
+            trader = new SimpleTrader();
+        } else if ("crossing_ma".equals(strategy)) {
+            trader = new CrossingMATrader();
+        }
 
         DataStream<String> rawStream = env
                 .addSource(new BinanceWebSocketSource(symbol))
@@ -81,6 +88,7 @@ public class Main {
                     .addSink(new CsvSink())
                     .name("CSV Sell Sink")
                     .uid("csv-sell-sink");
+
         } else {
             throw new IllegalArgumentException("Unrecognized running mode: " + runningMode);
         }

@@ -1,58 +1,87 @@
 @startuml
 
-package "org.example.source" {
+package "config" {
+    class FlinkEnvironmentConfig {
+          +configure()
+    }
+}
+
+package "main" {
+      class Main {
+        main()
+      }
+}
+
+package "source" {
     class BinanceWebSocketSource {
-        +connect()
+        +run()
     }
 }
 
-package "org.example.strategy" {
+package "strategy" {
     abstract class TradingStrategy {
-        #executeTrade()
-        #onPriceUpdate()
+        +buy()
+        +sell()
+        +hold()
     }
 
-    class SimpleTrader
-    class CrossingMATrader
+    class SimpleTrader {
+      +processElement()
+    }
+    class CrossingMATrader {
+      +processElement()
+    }
 }
 
-package "org.example.model" {
+package "model" {
     class Trade {
+        +eventType: String
+        +eventTimeMs: long
+        +symbol: String
+        +closePrice: double
+        +openPrice: double
+        +highPrice: double
+        +lowPrice: double
+        +volume: double
+        +totalVolume: double
         +price: double
-        +quantity: double
-        +timestamp: long
     }
 
     class TradeEvent {
         +symbol: String
         +price: double
         +volume: double
+        +action: String
+        +comment: String
+        +pnl: double
+        +pnlPercent: double
         +timestamp: long
+        +balance: double
     }
 }
 
-package "org.example.sink" {
+package "sink" {
     class InfluxBalanceSink {
         +invoke()
     }
-}
-
-package "org.example.main" {
-    class Main {
-        +main()
+    class CsvSink {
+        +toCsv()
+    }
+    class WriteCSV {
+        +writeHeaderIfNotExists()
+        +writeRow()
     }
 }
+
 
 ' Relationships
 TradingStrategy <|-- SimpleTrader
 TradingStrategy <|-- CrossingMATrader
 
-BinanceWebSocketSource --> Trade
-Trade --> TradeEvent
-InfluxBalanceSink --> TradeEvent
-
+Main -> FlinkEnvironmentConfig
 Main --> BinanceWebSocketSource
 Main --> TradingStrategy
-Main --> InfluxBalanceSink
+Main --> sink
+sink --> model
 
 @enduml
