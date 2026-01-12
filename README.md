@@ -6,18 +6,31 @@ Crypto currency prices are collected from a 24h moving average miniTicker (not r
 but this could easily be changed. Trading decisions are made based on rules defined in strategies. Core data, including current balance and
 trades made is being sinked to InfluxDB or a CSV file
 
-**Strategies available** \
-_SimpleTrader:_
-Based only on moving average of n steps. Enters a trade when value goes under average by some threshold: `trade.getClosePrice() < movingAvg * (1 - threshold)`, exits when value raises above the average.
-_CrossingMATrader_: More sophisticated, uses 2 MAs; fastMA (few steps back) and slowMA (many steps back). Trader enters a trade
-when fastMA goes above slowMA (bullish cross), exits when fastMA goes below slowMA. Optional volume check is available
-(only enter when volume is higher than average by some threshold). Trader also utilized stop loss and take profit (auto sell after significant drop or raise).
-
 **What is Apache Flink** \
 Apache Flink is an open-source, distributed data processing framework designed for high-throughput, 
 low-latency applications. It runs on clusters and processes data in parallel, 
 handling failures automatically with state management and checkpointing. Flink’s core strength is stream processing.
 Unlike batch-first systems, Flink treats streams as the primary data model
+
+### Data Flow
+
+```mermaid
+flowchart LR
+    Binance[Binance WebSocket] --> Flink[Flink Stream Processor]
+    Flink --> InfluxDB[InfluxDB]
+    Flink --> CSV[CSV File]
+```
+
+**Strategies available** 
+
+_SimpleTrader_:
+Based only on moving average of n steps. Enters a trade when value goes under average by some threshold: `trade.getClosePrice() < movingAvg * (1 - threshold)`, exits when value raises above the average.
+
+_CrossingMATrader_:  More sophisticated, uses 2 MAs; fastMA (few steps back) and slowMA (many steps back). Trader enters a trade
+when fastMA goes above slowMA (bullish cross), exits when fastMA goes below slowMA. Optional volume check is available
+(only enter when volume is higher than average by some threshold). Trader also utilized stop loss and take profit (auto sell after significant drop or raise).
+
+
 
 ### File structure
 ![structure](src/main/resources/diagram.png)
