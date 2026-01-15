@@ -11,6 +11,7 @@ services:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
     volumes:
       - ./target/CryptoTrader-1.0-SNAPSHOT.jar:/opt/flink/job.jar
+      - ./flink-conf.yaml:/opt/flink/conf/flink-conf.yaml
 
   taskmanager:
     image: flink:1.18-java17
@@ -24,6 +25,7 @@ services:
       - JOB_MANAGER_RPC_ADDRESS=jobmanager
     volumes:
       - ./data:/data
+      - ./flink-conf.yaml:/opt/flink/conf/flink-conf.yaml
 
   influxdb:
     image: influxdb:2.7

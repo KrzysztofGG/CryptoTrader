@@ -31,6 +31,8 @@ public class SimpleTrader extends TradingStrategy {
             KeyedProcessFunction<String, Trade, TradeEvent>.Context context,
             Collector<TradeEvent> collector) throws Exception {
 
+        long startTime = System.currentTimeMillis();
+
         // Handle obtaining moving average
         List<Double> prices = StreamSupport.stream(lastNPrices.get().spliterator(), false)
                         .collect(Collectors.toList());
@@ -64,6 +66,9 @@ public class SimpleTrader extends TradingStrategy {
             );
             hold(trade, collector);
         }
+
+        metrics.calculateProcessingMs(startTime);
+        metrics.calculateLatencyMs(trade);
     }
 
 }
