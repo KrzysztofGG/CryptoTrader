@@ -55,6 +55,8 @@ public class SimpleTrader extends TradingStrategy {
 
         // ---- EXIT LOGIC ----
         } else if (entry != null && trade.getClosePrice() > movingAvg * (1 + threshold)) {
+            double exitPrice = trade.getClosePrice();
+            metrics.markSell(exitPrice > entry);
             sell(trade, "Value over MA", collector);
         }
 

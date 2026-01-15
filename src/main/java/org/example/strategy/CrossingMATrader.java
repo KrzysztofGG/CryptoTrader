@@ -88,15 +88,18 @@ public class CrossingMATrader extends TradingStrategy {
             double stopLossPrice   = entry * (1 - stopLossThreshold);
 
             if (price >= takeProfitPrice) {
+                metrics.markSell(true);
                 sell(trade, "TAKE PROFIT", collector);
                 return;
 
             } else if (price <= stopLossPrice) {
+                metrics.markSell(false);
                 sell(trade, "STOP LOSS", collector);
                 return;
             }
 
             if (bearishCross) {
+                metrics.markSell(price > entry);
                 sell(trade, "BEARISH CROSS", collector);
                 return;
             }
