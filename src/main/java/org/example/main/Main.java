@@ -42,7 +42,7 @@ public class Main {
         env.getConfig().setGlobalJobParameters(params);
         FlinkEnvironmentConfig.configure(env);
 
-        String symbol = params.get("symbol", "btcusdt");
+        String symbols = params.get("symbols", "btcusdt");
         String influxUrl = params.getRequired("INFLUXDB_URL");
         String influxToken = params.getRequired("DOCKER_INFLUXDB_INIT_ADMIN_TOKEN");
         String runningMode = params.getRequired("RUNNING_MODE");
@@ -57,12 +57,22 @@ public class Main {
             trader = new CrossingMATrader();
         }
 
-        DataStream<String> rawStream = env
-                .addSource(new BinanceWebSocketSource(symbol))
-                .name("Binance WebSocket Source")
-                .uid("binance-websocket-source");
+        List<String> symbols_loaded = List.of(symbols.split(","));
 
-        DataStream<Trade> trades = rawStream
+        DataStream<String> combinedStream = env
+                .addSource(new BinanceWebSocketSource(symbols_loaded.get(0)))
+                .name("Binance WebSocket Source: " + symbols_loaded.get(0))
+                .uid("binance-websocket-source-" + symbols_loaded.get(0));
+
+        for (int i = 1; i < symbols_loaded.size(); i++) {
+            combinedStream = combinedStream.union(
+                    env.addSource(new BinanceWebSocketSource(symbols_loaded.get(i)))
+                            .name("Binance WebSocket Source: " + symbols_loaded.get(i))
+                            .uid("binance-websocket-source-" + symbols_loaded.get(i))
+            );
+        }
+
+        DataStream<Trade> trades = combinedStream
                 .map(new TradeMapper())
                 .name("JSON -> Trade")
                 .uid("trade-mapper");
