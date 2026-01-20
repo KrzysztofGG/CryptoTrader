@@ -22,6 +22,7 @@ flowchart LR
 ```
 
 ### Detailed Data Flow
+```mermaid
 sequenceDiagram
   autonumber
   participant Env as Env Vars / CLI Params
