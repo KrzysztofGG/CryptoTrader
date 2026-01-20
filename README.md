@@ -12,7 +12,7 @@ low-latency applications. It runs on clusters and processes data in parallel,
 handling failures automatically with state management and checkpointing. Flink’s core strength is stream processing.
 Unlike batch-first systems, Flink treats streams as the primary data model
 
-### Data Flow
+### Basic Data Flow
 
 ```mermaid
 flowchart LR
@@ -21,6 +21,46 @@ flowchart LR
     Flink --> CSV[CSV File]
 ```
 
+### Detailed Data Flow
+sequenceDiagram
+  autonumber
+  participant Env as Env Vars / CLI Params
+  participant Main as Main.java (Flink Job)
+  participant Source as BinanceWebSocketSource
+  participant Mapper as TradeMapper (JSON->Trade)
+  participant Strat as TradingStrategy (SimpleTrader / CrossingMATrader)
+  participant State as Flink Keyed State (ValueState/ListState)
+  participant Metrics as Metrics
+  participant Sink as InfluxBalanceSink / CsvSink
+
+  Env->>Main: Provide params (RUNNING_MODE, STRATEGY, symbols, Influx creds, OUTPUT_FILE_PATH)
+  Main->>Main: Configure Flink (checkpointing, restart strategy)
+  Main->>Source: addSource(symbol@miniTicker) for each symbol
+  Source-->>Main: emit JSON strings (ctx.collect under checkpoint lock)
+  Main->>Mapper: map(JSON)
+  Mapper-->>Main: Trade(symbol, closePrice, volume, eventTimeMs,...)
+  Main->>Strat: keyBy(symbol) + processElement(trade)
+
+  Strat->>State: read/update cashBalance, entryPrice, positionVolume
+  Strat->>State: read/update priceHistory/volumeHistory (ListState) + prev MA (ValueState)
+  Strat->>Metrics: update processing latency
+  Strat->>Metrics: update event-to-sink latency (now - trade.eventTimeMs)
+
+  alt Entry signal (e.g. bullish cross / price < MA threshold)
+    Strat-->>Main: emit TradeEvent(action=BUY, balance updated)
+  else Exit signal (stop loss / take profit / bearish cross / price > MA threshold)
+    Strat->>Metrics: markSell(win/loss)
+    Strat-->>Main: emit TradeEvent(action=SELL, pnl & pnlPercent computed)
+  else No action
+    Strat-->>Main: emit TradeEvent(action=HOLD)
+  end
+
+  alt RUNNING_MODE == "db"
+    Main->>Sink: invoke(TradeEvent) write Influx point (trade_balance)
+  else RUNNING_MODE == "csv"
+    Main->>Sink: filter SELL only + invoke(TradeEvent) append CSV row
+  end
+```
 **Strategies available** 
 
 _SimpleTrader_:
@@ -29,8 +69,6 @@ Based only on moving average of n steps. Enters a trade when value goes under av
 _CrossingMATrader_:  More sophisticated, uses 2 MAs; fastMA (few steps back) and slowMA (many steps back). Trader enters a trade
 when fastMA goes above slowMA (bullish cross), exits when fastMA goes below slowMA. Optional volume check is available
 (only enter when volume is higher than average by some threshold). Trader also utilized stop loss and take profit (auto sell after significant drop or raise).
-
-
 
 ### File structure
 ![structure](src/main/resources/diagram.png)
@@ -66,12 +104,8 @@ Or run `./start.sh`
 - If using CSV mode, values are sinked to location defined in OUTPUT_FILE_PATH environment variable in cryptotrader-taskmanager container, to print them one can run `docker exec -it cryptotrader-taskmanager cat "data/output.csv"`
 - If using DB mode, access InfluxDB UI at `localhost:8086`
 
-### Results
-
-1. Trading Profit & Loss 
+### Trading Results
 #### _SimpleTrader:_ 
 ![simple_pnl](src/main/resources/simple_pnl.png) 
 #### _CrossingMATrader:_ 
 ![crossing_pnl](src/main/resources/crossing_ma_pnl.png)
-2. Latency
-3. ???
