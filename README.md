@@ -63,7 +63,7 @@ Or run `./start.sh`
 
 ### How to observe app working
 - Program logs available in container: `docker logs -f cryptotrader-taskmanager`
-- If using CSV mode, values are sinked to location defined in OUTPUT_FILE_PATH environment variable
+- If using CSV mode, values are sinked to location defined in OUTPUT_FILE_PATH environment variable in cryptotrader-taskmanager container, to print them one can run `docker exec -it cryptotrader-taskmanager cat "data/output.csv"`
 - If using DB mode, access InfluxDB UI at `localhost:8086`
 
 ### Results
