@@ -31,6 +31,8 @@ public class SimpleTrader extends TradingStrategy {
             KeyedProcessFunction<String, Trade, TradeEvent>.Context context,
             Collector<TradeEvent> collector) throws Exception {
 
+        long startTime = System.currentTimeMillis();
+
         // Handle obtaining moving average
         List<Double> prices = StreamSupport.stream(lastNPrices.get().spliterator(), false)
                         .collect(Collectors.toList());
@@ -53,6 +55,8 @@ public class SimpleTrader extends TradingStrategy {
 
         // ---- EXIT LOGIC ----
         } else if (entry != null && trade.getClosePrice() > movingAvg * (1 + threshold)) {
+            double exitPrice = trade.getClosePrice();
+            metrics.markSell(exitPrice > entry);
             sell(trade, "Value over MA", collector);
         }
 
@@ -64,6 +68,9 @@ public class SimpleTrader extends TradingStrategy {
             );
             hold(trade, collector);
         }
+
+        metrics.calculateProcessingMs(startTime);
+        metrics.calculateLatencyMs(trade);
     }
 
 }

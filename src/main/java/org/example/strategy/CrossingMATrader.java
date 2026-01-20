@@ -47,6 +47,8 @@ public class CrossingMATrader extends TradingStrategy {
             KeyedProcessFunction<String, Trade, TradeEvent>.Context context,
             Collector<TradeEvent> collector) throws Exception {
 
+        long startTime = System.currentTimeMillis();
+
         if (cashBalance.value() == null) cashBalance.update(initialCapital);
 
         // Handle keeping prices up to date
@@ -86,15 +88,18 @@ public class CrossingMATrader extends TradingStrategy {
             double stopLossPrice   = entry * (1 - stopLossThreshold);
 
             if (price >= takeProfitPrice) {
+                metrics.markSell(true);
                 sell(trade, "TAKE PROFIT", collector);
                 return;
 
             } else if (price <= stopLossPrice) {
+                metrics.markSell(false);
                 sell(trade, "STOP LOSS", collector);
                 return;
             }
 
             if (bearishCross) {
+                metrics.markSell(price > entry);
                 sell(trade, "BEARISH CROSS", collector);
                 return;
             }
@@ -116,6 +121,10 @@ public class CrossingMATrader extends TradingStrategy {
         // store MA history for next tick
         prevFastMA.update(fastMA);
         prevSlowMA.update(slowMA);
+
+        metrics.calculateProcessingMs(startTime);
+        metrics.calculateLatencyMs(trade);
+
     }
 
     private List<Double> updateHistory(ListState<Double> state, double newValue, int max) throws Exception {

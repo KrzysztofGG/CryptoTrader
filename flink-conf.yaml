@@ -1,0 +1,12 @@
+metrics.latency.interval: 5000
+state.latency-track.keyed-state-enabled: true
+state.latency-track.sample-interval: 100
+state.latency-track.history-size: 128
+
+jobmanager.rpc.address: jobmanager
+
+jobmanager.memory.process.size: 1024m
+taskmanager.memory.process.size: 2048m
+
+query.server.port: 6125
+blob.server.port: 6124

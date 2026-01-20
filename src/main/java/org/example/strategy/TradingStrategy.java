@@ -5,6 +5,7 @@ import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
+import org.example.metrics.Metrics;
 import org.example.model.Trade;
 import org.example.model.TradeEvent;
 import org.slf4j.Logger;
@@ -23,12 +24,15 @@ public abstract class TradingStrategy
     protected transient ValueState<Double> positionVolume ;
     protected final double initialCapital = 100_000;
     protected final double investmentSize = 0.30; //buy for % of full Capital
+    protected transient Metrics metrics;
 
     @Override
     public void open(Configuration parameters) {
         cashBalance = getRuntimeContext().getState(new ValueStateDescriptor<>("cashBalance", Double.class));
         entryPrice = getRuntimeContext().getState(new ValueStateDescriptor<>("entryPrice", Double.class));
         positionVolume  = getRuntimeContext().getState(new ValueStateDescriptor<>("volume", Double.class));
+
+        metrics = new Metrics(getRuntimeContext());
     }
 
     protected double movingAverage(List<Double> prices) {

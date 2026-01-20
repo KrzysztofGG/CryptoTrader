@@ -36,6 +36,8 @@ public class Trade {
         return new Date(eventTimeMs);
     }
 
+    public long getEventTimeMs() { return eventTimeMs; }
+
     public String getSymbol() {
         return symbol;
     }
