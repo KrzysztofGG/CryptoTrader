@@ -82,7 +82,7 @@ INFLUXDB_URL=http://influxdb:8086
 OUTPUT_FILE_PATH=/data/output.csv
 RUNNING_MODE=db # or csv
 STRATEGY=crossing_ma # or simple
-symbol=btcusdt
+symbols=btcusdt,ethusdt,bnbusdt,adausdt
 
 # InfluxDB 2.x bootstrap
 DOCKER_INFLUXDB_INIT_MODE=setup
